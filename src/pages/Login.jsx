@@ -1,45 +1,57 @@
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
-import { Link } from "react-router";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import LoginImage from "/LoginImage.png";
 import axios from "axios";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const successMessage = location.state?.successMessage;
+  const navigate = useNavigate();
+  const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
-  const userInfo = {
-    email: "m123@gmail.com",
-    password: "12345678",
-  };
-  const [user, setUser] = useState(userInfo);
-  function handleLogin(email, password, e) {
+  function handleLogin(e) {
     e.preventDefault();
-    if (email === userInfo.email && password === userInfo.password) {
-      console.log("Authnticated Sucessfuly 💪🏻");
-    }
+    axios
+      .post("http://127.0.0.1:8000/userManagement/login/", {
+        username,
+        password,
+      })
+      .then((res) => {
+        console.log(res.data);
+        const token = res.data.access;
+        const user = res.data.user;
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/");
+      })
+      .catch((err) => {
+        console.error("Login Failed", err);
+      });
   }
-  axios
-    .get("http://127.0.0.1:8000/companies/companies/")
-    .then((res) => console.log(res))
-    .catch((err) => console.log(err));
   return (
     <div className="bg-[#fafafa]">
       <Header />
       <div className="container mx-auto mt-[62px] flex justify-center items-center min-h-[91vh] w-full px-3 ">
         <div className="login w-full min-h-full p-10 flex flex-col md:w-1/2">
+          {successMessage && (
+            <div className="mb-4 bg-green-100 text-green-800 border border-green-300 p-3 rounded">
+              ✅ {successMessage}
+            </div>
+          )}
           <h3 className="text-primary-dark text-3xl font-bold text-center">
             تسجيل الدخول
           </h3>
           <form action="" className="mt-7 w-full">
             <label htmlFor="" className="mb-2 block">
-              البريد الإلكتروني
+              اسم المستخدم
             </label>
             <input
-              type="email"
+              type="text"
               className="bg-white rounded-2xl py-2.5 px-3.5 w-full mb-3 outline-primary-light"
-              placeholder="اكتب البريد الإلكتروني"
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="اكتب اسم المستخدم"
+              onChange={(e) => setUserName(e.target.value)}
             />
             <label htmlFor="" className="mb-2 block">
               كلمة المرور
@@ -65,8 +77,8 @@ const Login = () => {
             </div>
             <Button
               className="w-full mb-3 bg-secondary-dark hover:bg-secondary-light"
-              disabled={email && password ? false : true}
-              onClick={(e) => handleLogin(email, password, e)}
+              disabled={username && password ? false : true}
+              onClick={handleLogin}
             >
               تسجيل الدخول
             </Button>
